@@ -367,10 +367,12 @@ public class SparkPlatform {
         // schedule a task to detect timeouts
         this.plugin.executeAsync(() -> {
             timeoutThread.set(Thread.currentThread());
+            int warningIntervalSeconds = 5;
+
             try {
                 for (int i = 1; i <= 3; i++) {
                     try {
-                        Thread.sleep(5000);
+                        Thread.sleep(warningIntervalSeconds * 1000);
                     } catch (InterruptedException e) {
                         // ignore
                     }
@@ -382,7 +384,8 @@ public class SparkPlatform {
                     Thread executor = executorThread.get();
                     if (executor == null) {
                         getPlugin().log(Level.WARNING, "A command execution has not completed after " +
-                                (i * 5) + " seconds but there is no executor present. Perhaps the executor shutdown?");
+                                (i * warningIntervalSeconds) + " seconds but there is no executor present. Perhaps the executor shutdown?");
+                        getPlugin().log(Level.WARNING, "If the command subsequently completes without any errors, this warning should be ignored. :)");
 
                     } else {
                         String stackTrace = Arrays.stream(executor.getStackTrace())
@@ -390,7 +393,8 @@ public class SparkPlatform {
                                 .collect(Collectors.joining("\n"));
 
                         getPlugin().log(Level.WARNING, "A command execution has not completed after " +
-                                (i * 5) + " seconds, it might be stuck. Trace: \n" + stackTrace);
+                                (i * warningIntervalSeconds) + " seconds, it *might* be stuck. Trace: \n" + stackTrace);
+                        getPlugin().log(Level.WARNING, "If the command subsequently completes without any errors, this warning should be ignored. :)");
                     }
                 }
             } finally {
